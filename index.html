@@ -36,6 +36,41 @@
 </head>
   <body class="bg-brand-background">
     <div id="root"></div>
-    <script type="text/babel" data-presets="typescript,react" src="./index.tsx"></script>
+    <script type="module">
+      async function loadAndRun() {
+        try {
+          // 1. Fetch the source code of our main app component
+          const response = await fetch('./index.tsx');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const tsxCode = await response.text();
+
+          // 2. Transpile the TSX code using Babel Standalone
+          const transformed = Babel.transform(tsxCode, {
+            presets: ['react', 'typescript'],
+            filename: 'index.tsx' // for better error messages
+          });
+          
+          // 3. Create a new script element to hold the transpiled code
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = transformed.code;
+          
+          // 4. Append and execute the script
+          document.body.appendChild(script);
+        } catch (error) {
+          console.error('Failed to load or transpile the application:', error);
+          const root = document.getElementById('root');
+          if(root) {
+             root.innerHTML = `<div style="padding: 2rem; font-family: sans-serif; color: red; background-color: #fff1f1; border: 1px solid red; border-radius: 8px;">
+               <h2>Error loading application</h2>
+               <pre style="white-space: pre-wrap; word-break: break-all;">${error.message}</pre>
+             </div>`;
+          }
+        }
+      }
+      loadAndRun();
+    </script>
   </body>
 </html>
